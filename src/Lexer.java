@@ -39,7 +39,6 @@ public class Lexer {
                     peek = ' ';
                     return Keyword.le;
                 } else {
-                    peek = ' ';
                     return Keyword.lt;
                 }
             }
@@ -49,7 +48,6 @@ public class Lexer {
                     peek = ' ';
                     return Keyword.ge;
                 } else {
-                    peek = ' ';
                     return Keyword.gt;
                 }
             }
@@ -72,16 +70,22 @@ public class Lexer {
                 readch(br);
                 if(peek == '/') {
                     // Ignore everything until the end of the line
-                    // reset position?
                     while(peek != '\n') {
                         readch(br);
                     }
                     line++;
                     return lexical_scan(br);
                 } else if(peek == '*') {
-                    // DFA FOR BLOCK COMMENT
+                    if(!validateComment(br)) {
+                        System.err.println("Garbage comment");
+                        return null;
+                    }
+                    else {
+                        peek = ' ';
+                        return lexical_scan(br);
+                    }
+
                 } else {
-                    peek = ' ';
                     return Token.div;
                 }
             }
@@ -255,24 +259,22 @@ public class Lexer {
     // DFA: check if the comment start finishes or not if not it's just div, mult and not a comment. For single lines
     // simply continue until the
     // Do this check if the character after the comment start is a div or a mult character
-
-    boolean validateComment(String toCheck) {
+    boolean validateComment(BufferedReader br) {
         int state = 0;
-        for(int i = 0; i < toCheck.length(); i++) {
+        // while not end of file or */ is found (the latter is state 2)
+        while(state != 2 && peek != (char)-1) {
             switch (state) {
                 case 0:
-                    if(toCheck.charAt(i) == '*') state = 1;
-                    else state = -1;
+                    if (peek == '*') state = 1;
+                    else state = 0;
                     break;
                 case 1:
-                    if(toCheck.charAt(i) == '*') state = 2;
-                    else state = -1;
-                    break;
-                case 2:
-                    if(toCheck.charAt(i) == '/') state = 2;
-                    else state = -1;
+                    if (peek == '*') state = 1;
+                    else if (peek == '/') state = 2;
+                    else state = 0;
                     break;
             }
+            readch(br);
         }
         return state == 2;
     }
@@ -289,13 +291,14 @@ public class Lexer {
                     else state = -1;
                     break;
                 case 1:
-                    if (c == '_') state = 1;
+                    if (c == '_') continue;
                     else if (Character.isLetter(c) || Character.isDigit(c)) state = 2;
                     else state = -1;
                     break;
                 case 2:
-                    if (Character.isLetter(c) || Character.isDigit(c) || c == '_') state = 2;
+                    if (Character.isLetter(c) || Character.isDigit(c) || c == '_') continue;
                     else state = -1;
+                    break;
             }
         }
 
@@ -310,20 +313,23 @@ public class Lexer {
             char c = toCheck.charAt(i);
 
             switch (state) {
-                case 0:
-                    if (c >= '1' && c <= '9') state = 1;
+                case 0 -> {
+                    if (c == '0') state = 2;
+                    else if (c >= '1' && c <= '9') state = 1;
                     else state = -1;
-                    break;
-                case 1:
-                    if (c >= '0' && c <= '9') state = 1;
+                }
+                case 1 -> {
+                    if (c >= '0' && c <= '9') continue;
                     else state = -1;
-                    break;
+                }
+                case 2 -> state = -1;
             }
         }
-        return state == 1;
+        return state == 1 || state == 2;
     }
+
     public static void main(String[] args) {
-        Lexer lex = new Lexer();
+       Lexer lex = new Lexer();
         String path = "/Users/leoluca/Developer/IdeaProjects/ProgettoLFT/src/test.txt"; // il percorso del file da leggere
         try {
             BufferedReader br = new BufferedReader(new FileReader(path));

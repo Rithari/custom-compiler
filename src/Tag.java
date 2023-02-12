@@ -36,9 +36,9 @@ public enum Tag {
 		this.tagValue = tagValue;
 	}
 
-	/* public int getTag() {
+	public int getTag() {
 		return this.tagValue;
-	} */
+	}
 
 
 	@Override

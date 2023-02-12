@@ -1,0 +1,8 @@
+read[a_1, _2b];
+while(<> a_1 _b)
+        conditional[option (> a_1 _b) do assign - a_1 _b to a_1]
+        else assign - _b a_1 to _b end;
+print[a_1, +(a_1, _b, 100), 2023];
+assign 22 to c, d;
+print[c, d]
+// amogus

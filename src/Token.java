@@ -22,4 +22,8 @@ public class Token {
 			semicolon = new Token(Tag.SEMICOLON),
 			comma = new Token(Tag.COMMA),
 			eof = new Token(Tag.EOF);
+
+	public Tag getTag() {
+		return this.tag;
+	}
 }
