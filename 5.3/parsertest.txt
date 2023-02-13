@@ -1,0 +1,17 @@
+assign 300 to p;
+print[x];
+print[+(1,2,3), x];
+read[x,y];
+
+print[/ a x];
+
+while( > x 2) {
+    print[x];
+    assign - x 1 to x
+};
+
+conditional [
+    option (> x y) do print[x]
+    option (== x y) do print[x, y]
+    ]
+    else print[y] end

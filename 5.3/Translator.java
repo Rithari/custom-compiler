@@ -72,7 +72,7 @@ public class Translator {
             case PRINT:
                 match(Tag.PRINT);
                 match(Tag.PQA);
-                exprlist(); /* TODO: check if it's correct */
+                exprlist();
                 code.emit(OpCode.invokestatic, 1);
                 match(Tag.PQC);
                 break;
@@ -275,45 +275,39 @@ public class Translator {
             match(Tag.RELOP);
             expr();
             expr();
-            code.emit(OpCode.if_icmpeq, true_label);
-            code.emit(OpCode.GOto, false_label);
+            code.emit(OpCode.if_icmpne, false_label);
         } else if(look == Keyword.lt) {
             match(Tag.RELOP);
             expr();
             expr();
-            code.emit(OpCode.if_icmplt, true_label);
-            code.emit(OpCode.GOto, false_label);
+            code.emit(OpCode.if_icmpge, false_label);
         } else if(look == Keyword.gt) {
             match(Tag.RELOP);
             expr();
             expr();
-            code.emit(OpCode.if_icmpgt, true_label);
-            code.emit(OpCode.GOto, false_label);
+            code.emit(OpCode.if_icmple, false_label);
         } else if(look == Keyword.le) {
             match(Tag.RELOP);
             expr();
             expr();
-            code.emit(OpCode.if_icmple, true_label);
-            code.emit(OpCode.GOto, false_label);
+            code.emit(OpCode.if_icmpgt, false_label);
         } else if(look == Keyword.ge) {
             match(Tag.RELOP);
             expr();
             expr();
-            code.emit(OpCode.if_icmpge, true_label);
-            code.emit(OpCode.GOto, false_label);
+            code.emit(OpCode.if_icmplt, false_label);
         } else if(look == Keyword.ne) {
             match(Tag.RELOP);
             expr();
             expr();
-            code.emit(OpCode.if_icmpne, true_label);
-            code.emit(OpCode.GOto, false_label);
+            code.emit(OpCode.if_icmpeq, false_label);
         } else {
             error("Syntax error in bexpr");
         }
     }
     public static void main(String[] args) {
         Lexer lex = new Lexer();
-        String path = "/Users/leoluca/Developer/IdeaProjects/ProgettoLFT/src/testTrans.lft"; // il percorso del file da leggere
+        String path = "/Users/leoluca/Developer/IdeaProjects/ProgettoLFT/5.3/testTrans.lft"; // il percorso del file da leggere
         try {
             BufferedReader br = new BufferedReader(new FileReader(path));
             Translator translator = new Translator(lex, br);
@@ -323,4 +317,3 @@ public class Translator {
         } catch (IOException e) {e.printStackTrace();}
     }
 }
-
