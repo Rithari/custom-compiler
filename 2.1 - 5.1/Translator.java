@@ -72,7 +72,7 @@ public class Translator {
             case PRINT:
                 match(Tag.PRINT);
                 match(Tag.PQA);
-                exprlist(); /* TODO: check if it's correct */
+                exprlist();
                 code.emit(OpCode.invokestatic, 1);
                 match(Tag.PQC);
                 break;
