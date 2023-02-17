@@ -1,8 +1,8 @@
 import java.io.*;
 
 public class Validator {
-    private Lexer lex;
-    private BufferedReader pbr;
+    private final Lexer lex;
+    private final BufferedReader pbr;
     private Token look;
 
     public Validator(Lexer l, BufferedReader br) {

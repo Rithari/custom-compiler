@@ -1,8 +1,8 @@
 import java.io.*;
 
 public class Parser_Old {
-    private Lexer lex;
-    private BufferedReader pbr;
+    private final Lexer lex;
+    private final BufferedReader pbr;
     private Token look;
 
     public Parser_Old(Lexer l, BufferedReader br) {

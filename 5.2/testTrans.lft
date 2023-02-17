@@ -237,9 +237,12 @@ while (> x 0) {
     assign - x 1 to x
 }*/
 
-/*
+
 read[x, y, z];
 
 conditional [
     option(&& || < x y && < x z <> x y > x 0) do print[x]
-] end */
+    option (> z 0) do {
+                            print[z]
+                        }
+] else { print[x, y, z] } end

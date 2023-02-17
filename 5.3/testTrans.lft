@@ -1,15 +1,3 @@
-/*
-//  lettura, assegnamento e stampa di espressione! -> OK
-read[x, y, z];
-
-
-assign -1 to x;
-assign 20 to y;
-assign 30 to z;
-print[+(x, *(y, z))]
-*/
-
-
 
 /*
 //  assegnamento, cicli while annidati e stampa! -> OK
@@ -110,7 +98,7 @@ assign +(5, *(2, 3)) to x, y, z;
 print[x, y, z]//lAST
 */
 
-
+/*
 assign *(1, 3) to a, b;
 read[a];
 print[a];
@@ -122,6 +110,7 @@ while (<= c a) {
     assign +(1, c) to c;
     print[res]
 };
+*/
 /*
 conditional[
     option (<= a c) do {
@@ -189,20 +178,23 @@ conditional[
 
 print[y]*/
 
-/*while (> x 0) {
+read[x, y, z];
+
+while (> x 0) {
     conditional[
-        option (! && < x y  < x z) do {
+        option (< x z) do {
             print[x]
         }
-        option (! > y 0) do {
+        option (> y 0) do {
             print[y, +(x, y, z)]
         }
         option (> z 0) do {
             print[z]
-        }
+        } option (< x y) do assign 3 to y
+        option (> x y) do assign 3 to x
     ] else { print[x, y, z] } end;
     assign - x 1 to x
-}*/
+}
 
 /*
 read[x, y, z];
@@ -235,9 +227,9 @@ while (> x 0) {
     ] end; //else { print[x, y, z] } end;
     assign - x 1 to x
 }*/
-/*
-read[x, y, z];
+
+/*read[x, y, z];
 
 conditional [
     option(&& || < x y && < x z <> x y > x 0) do print[x]
-] end */
+] end*/

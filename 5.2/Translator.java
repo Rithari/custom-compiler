@@ -1,8 +1,9 @@
 import java.io.*;
+import java.util.Objects;
 
 public class Translator {
-    private Lexer lex;
-    private BufferedReader pbr;
+    private final Lexer lex;
+    private final BufferedReader pbr;
     private Token look;
 
     SymbolTable st = new SymbolTable();
@@ -31,8 +32,13 @@ public class Translator {
     }
 
     private void statlist() {
-        stat();
-        statlistp();
+        switch (look.tag) {
+            case ASSIGN, PRINT, READ, WHILE, COND, PGA -> {
+                stat();
+                statlistp();
+            }
+            default -> error("Syntax error in statlist");
+        }
     }
 
     private void statlistp() {
@@ -49,43 +55,46 @@ public class Translator {
         }
     }
     public void prog() {
-        int lnext_prog = code.newLabel();
-        statlist();
-        code.emitLabel(lnext_prog);
-        match(Tag.EOF);
-        try {
-        	code.toJasmin();
-        }
-        catch(IOException e) {
-        	System.out.println("IO error\n");
+        switch (look.tag) {
+            case ASSIGN, PRINT, READ, WHILE, COND, PGA -> {
+                int lnext_prog = code.newLabel();
+                statlist();
+                code.emitLabel(lnext_prog);
+                match(Tag.EOF);
+                try {
+                    code.toJasmin();
+                } catch (IOException e) {
+                    System.out.println("IO error\n");
+                }
+            }
+            default -> error("Syntax error in prog");
         }
     }
 
     private void stat() {
-        switch(look.tag) {
-            case ASSIGN:
+        switch (look.tag) {
+            case ASSIGN -> {
                 match(Tag.ASSIGN);
                 expr();
                 match(Tag.TO);
                 idlist(true);
-                break;
-            case PRINT:
+            }
+            case PRINT -> {
                 match(Tag.PRINT);
                 match(Tag.PQA);
-                exprlist();
-                code.emit(OpCode.invokestatic, 1);
+                exprlist(OpCode.invokestatic);
                 match(Tag.PQC);
-                break;
-            case READ:
+            }
+            case READ -> {
                 match(Tag.READ);
                 match(Tag.PQA);
                 idlist(false);
                 match(Tag.PQC);
-                break;
-            case WHILE:
+            }
+            case WHILE -> {
                 match(Tag.WHILE);
                 match(Tag.PTA);
-                int whileStart= code.newLabel();
+                int whileStart = code.newLabel();
                 int whileTrue = code.newLabel();
                 int whileEnd = code.newLabel();
                 code.emitLabel(whileStart);
@@ -95,54 +104,58 @@ public class Translator {
                 stat();
                 code.emit(OpCode.GOto, whileStart);
                 code.emitLabel(whileEnd);
-                break;
-            case COND:
+            }
+            case COND -> {
                 match(Tag.COND);
                 match(Tag.PQA);
-                int condElse = code.newLabel();
                 int condEnd = code.newLabel();
                 optlist(condEnd);
                 match(Tag.PQC);
-                if(look.tag == Tag.ELSE) {
-                    match(Tag.ELSE);
-                    code.emitLabel(condElse);
-                    stat();
-                }
+                condElse();
                 code.emitLabel(condEnd);
                 match(Tag.END);
-                break;
-            case PGA:
+            }
+            case PGA -> {
                 match(Tag.PGA);
                 statlist();
                 match(Tag.PGC);
-                break;
+            }
+            default -> error("Syntax error in else");
+        }
+    }
+
+    private void condElse() {
+        if(look.tag == Tag.ELSE) {
+            move();
+            stat();
+        } else if (look.tag != Tag.END) {
+            error("Syntax error in condElse");
         }
     }
 
     // Create a variable, if it doesn't exist. idlist only does this once where idlistp does it recursively
     private void idlist(boolean isAssign) {
-        switch(look.tag) {
-	    case ID:
-        	int id_addr = st.lookupAddress(((Keyword)look).lexeme);
-                if (id_addr==-1) {
-                    id_addr = count;
-                    st.insert(((Keyword)look).lexeme,count++);
-                }
-                if(isAssign) {
-                    code.emit(OpCode.istore, id_addr);
-                } else {
-                    code.emit(OpCode.invokestatic, 0);
-                    code.emit(OpCode.istore, id_addr);
-                }
-                match(Tag.ID);
-                idlistp(isAssign, id_addr);
-                break;
-    	}
+        if (Objects.requireNonNull(look.tag) == Tag.ID) {
+            int id_addr = st.lookupAddress(((Keyword) look).lexeme);
+            if (id_addr == -1) {
+                id_addr = count;
+                st.insert(((Keyword) look).lexeme, count++);
+            }
+            if (!isAssign) {
+                code.emit(OpCode.invokestatic, 0);
+            }
+            code.emit(OpCode.istore, id_addr);
+            match(Tag.ID);
+            idlistp(isAssign, id_addr);
+        }
+        else {
+            error("Syntax error in idlist");
+        }
     }
 
     private void idlistp(boolean isAssign, int id_addrOld) {
         switch(look.tag) {
-            case SEMICOLON, PQC, PGC, EOF, END:
+            case SEMICOLON, PQC, PGC, EOF, END, OPTION:
                 break;
             case COMMA:
                 match(Tag.COMMA);
@@ -153,11 +166,10 @@ public class Translator {
                 }
                 if(isAssign) {
                     code.emit(OpCode.iload, id_addrOld);
-                    code.emit(OpCode.istore, id_addr);
                 } else {
                     code.emit(OpCode.invokestatic, 0);
-                    code.emit(OpCode.istore, id_addr);
                 }
+                code.emit(OpCode.istore, id_addr);
                 match(Tag.ID);
                 idlistp(isAssign, id_addr);
                 break;
@@ -167,65 +179,71 @@ public class Translator {
     }
 
     private void expr() {
-        switch(look.tag) {
-            case NUM:
-                int num = ((NumberTok)look).num;
+        switch (look.tag) {
+            case NUM -> {
+                int num = ((NumberTok) look).num;
                 code.emit(OpCode.ldc, num);
                 match(Tag.NUM);
-                break;
-            case ID:
-                int id_addr = st.lookupAddress(((Keyword)look).lexeme);
-                if (id_addr==-1) {
-                    id_addr = count;
-                    st.insert(((Keyword)look).lexeme,count++);
+            }
+            case ID -> {
+                Keyword kw = (Keyword) look;
+                int id_addr = st.lookupAddress(kw.lexeme);
+                if (id_addr == -1) {
+                    error("Variable \"" + kw.lexeme + "\" not initialized.");
                 }
                 code.emit(OpCode.iload, id_addr);
                 match(Tag.ID);
-                break;
-            case SUB:
+            }
+            case SUB -> {
                 match(Tag.SUB);
                 expr();
                 expr();
                 code.emit(OpCode.isub);
-                break;
-            case SUM:
+            }
+            case SUM -> {
                 match(Tag.SUM);
                 match(Tag.PTA);
-                exprlist();
+                exprlist(OpCode.iadd);
                 match(Tag.PTC);
-                code.emit(OpCode.iadd);
-                break;
-            case MUL:
+            }
+            case MUL -> {
                 match(Tag.MUL);
                 match(Tag.PTA);
-                exprlist();
+                exprlist(OpCode.imul);
                 match(Tag.PTC);
-                code.emit(OpCode.imul);
-                break;
-            case DIV:
+            }
+            case DIV -> {
                 match(Tag.DIV);
                 expr();
                 expr();
                 code.emit(OpCode.idiv);
-                break;
-            default:
-                error("Syntax error in expr");
+            }
+            default -> error("Syntax error in expr");
         }
     }
 
-    private void exprlist() {
-        expr();
-        exprlistp();
+    private void exprlist(OpCode opCode) {
+        switch (look.tag) {
+            case ID, NUM, SUM, SUB, MUL, DIV -> {
+                expr();
+                if (opCode == OpCode.invokestatic) {
+                    code.emit(OpCode.invokestatic, 1);
+                }
+                exprlistp(opCode);
+            }
+            default -> error("Syntax error in exprlist");
+        }
     }
 
-    private void exprlistp() {
+    private void exprlistp(OpCode opCode) {
         switch(look.tag) {
             case PQC, PTC:
                 break;
             case COMMA:
                 match(Tag.COMMA);
                 expr();
-                exprlistp();
+                code.emit(opCode, 1);
+                exprlistp(opCode);
                 break;
             default:
                 error("Syntax error in exprlistp");
@@ -233,8 +251,12 @@ public class Translator {
     }
 
     private void optlist(int condEnd) {
-        optitem(condEnd);
-        optlistp(condEnd);
+        if (Objects.requireNonNull(look.tag) == Tag.OPTION) {
+            optitem(condEnd);
+            optlistp(condEnd);
+        } else {
+            error("Syntax error in optlist");
+        }
     }
     private void optlistp(int condEnd) {
         // optitem optlistp
@@ -251,79 +273,59 @@ public class Translator {
         }
     }
     private void optitem(int condEnd) {
-        switch(look.tag) {
-            case OPTION:
-                int true_label = code.newLabel();
-                int false_label = code.newLabel();
-                match(Tag.OPTION);
-                match(Tag.PTA);
-                bexpr(true_label, false_label);
-                match(Tag.PTC);
-                match(Tag.DO);
-                code.emitLabel(true_label);
-                stat();
-                code.emit(OpCode.GOto, condEnd);
-                code.emitLabel(false_label);
-                break;
-            default:
-                error("Syntax error in optitem" + look.tag);
+        if (Objects.requireNonNull(look.tag) == Tag.OPTION) {
+            int true_label = code.newLabel();
+            int false_label = code.newLabel();
+            match(Tag.OPTION);
+            match(Tag.PTA);
+            bexpr(true_label, false_label);
+            match(Tag.PTC);
+            match(Tag.DO);
+            code.emitLabel(true_label);
+            stat();
+            code.emit(OpCode.GOto, condEnd);
+            code.emitLabel(false_label);
+        } else {
+            error("Syntax error in optitem" + look.tag);
         }
     }
     // Bexpr evaluates the expression and emits the appropriate code
     private void bexpr(int true_label, int false_label) {
-        if(look == Keyword.eq) {
-            match(Tag.RELOP);
-            expr();
-            expr();
-            code.emit(OpCode.if_icmpeq, true_label);
-            code.emit(OpCode.GOto, false_label);
-        } else if(look == Keyword.lt) {
-            match(Tag.RELOP);
-            expr();
-            expr();
-            code.emit(OpCode.if_icmplt, true_label);
-            code.emit(OpCode.GOto, false_label);
-        } else if(look == Keyword.gt) {
-            match(Tag.RELOP);
-            expr();
-            expr();
-            code.emit(OpCode.if_icmpgt, true_label);
-            code.emit(OpCode.GOto, false_label);
-        } else if(look == Keyword.le) {
-            match(Tag.RELOP);
-            expr();
-            expr();
-            code.emit(OpCode.if_icmple, true_label);
-            code.emit(OpCode.GOto, false_label);
-        } else if(look == Keyword.ge) {
-            match(Tag.RELOP);
-            expr();
-            expr();
-            code.emit(OpCode.if_icmpge, true_label);
-            code.emit(OpCode.GOto, false_label);
-        } else if(look == Keyword.ne) {
-            match(Tag.RELOP);
-            expr();
-            expr();
-            code.emit(OpCode.if_icmpne, true_label);
-            code.emit(OpCode.GOto, false_label);
-        } else if(look == Keyword.and) {
-            match(Tag.AND);
-            int true_label2 = code.newLabel();
-            bexpr(true_label2, false_label);
-            code.emitLabel(true_label2);
-            bexpr(true_label, false_label);
-        } else if(look == Keyword.or) {
-            match(Tag.OR);
-            int false_label2 = code.newLabel();
-            bexpr(true_label, false_label2);
-            code.emitLabel(false_label2);
-            bexpr(true_label, false_label);
-        } else if(look == Keyword.not) {
-            match(Tag.NOT);
-            bexpr(false_label, true_label);
-        } else {
-            error("Syntax error in bexpr");
+        switch (Objects.requireNonNull(look.tag)) {
+            case RELOP -> {
+                Keyword relop = (Keyword) look;
+                move();
+                expr();
+                expr();
+                switch (relop.lexeme) {
+                    case "==" -> code.emit(OpCode.if_icmpeq, true_label);
+                    case "<" -> code.emit(OpCode.if_icmplt, true_label);
+                    case ">" -> code.emit(OpCode.if_icmpgt, true_label);
+                    case "<=" -> code.emit(OpCode.if_icmple, true_label);
+                    case ">=" -> code.emit(OpCode.if_icmpge, true_label);
+                    case "<>" -> code.emit(OpCode.if_icmpne, true_label);
+                }
+                code.emit(OpCode.GOto, false_label);
+            }
+            case AND -> {
+                match(Tag.AND);
+                int true_label2 = code.newLabel();
+                bexpr(true_label2, false_label);
+                code.emitLabel(true_label2);
+                bexpr(true_label, false_label);
+            }
+            case OR -> {
+                match(Tag.OR);
+                int false_label2 = code.newLabel();
+                bexpr(true_label, false_label2);
+                code.emitLabel(false_label2);
+                bexpr(true_label, false_label);
+            }
+            case NOT -> {
+                match(Tag.NOT);
+                bexpr(false_label, true_label);
+            }
+            default -> error("Syntax error in bexpr");
         }
     }
     public static void main(String[] args) {

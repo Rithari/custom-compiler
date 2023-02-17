@@ -1,10 +1,11 @@
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.Objects;
 
 public class Parser {
-    private Lexer lex;
-    private BufferedReader pbr;
+    private final Lexer lex;
+    private final BufferedReader pbr;
     private Token look;
 
     public Parser(Lexer l, BufferedReader br) {
@@ -53,50 +54,50 @@ public class Parser {
     }
 
     private void stat() {
-        switch(look.tag) {
-            case ASSIGN:
+        switch (look.tag) {
+            case ASSIGN -> {
                 match(Tag.ASSIGN);
                 expr();
                 match(Tag.TO);
                 idlist();
-                break;
-            case PRINT:
+            }
+            case PRINT -> {
                 match(Tag.PRINT);
                 match(Tag.PQA);
                 exprlist();
                 match(Tag.PQC);
-                break;
-            case READ:
+            }
+            case READ -> {
                 match(Tag.READ);
                 match(Tag.PQA);
                 idlist();
                 match(Tag.PQC);
-                break;
-            case WHILE:
+            }
+            case WHILE -> {
                 match(Tag.WHILE);
                 match(Tag.PTA);
                 bexpr();
                 match(Tag.PTC);
                 stat();
-                break;
-            case COND:
+            }
+            case COND -> {
                 match(Tag.COND);
                 match(Tag.PQA);
                 optlist();
                 match(Tag.PQC);
-                if(look.tag == Tag.ELSE) {
+                if (look.tag == Tag.ELSE) {
                     match(Tag.ELSE);
                     stat();
                     match(Tag.END);
                 } else {
                     match(Tag.END);
                 }
-                break;
-            case PGA:
+            }
+            case PGA -> {
                 match(Tag.PGA);
                 statlist();
                 match(Tag.PGC);
-                break;
+            }
         }
     }
 
@@ -140,64 +141,55 @@ public class Parser {
     }
 
     private void optitem() {
-        switch(look.tag) {
-            case OPTION:
-                match(Tag.OPTION);
-                match(Tag.PTA);
-                bexpr();
-                match(Tag.PTC);
-                match(Tag.DO);
-                stat();
-                break;
-            default:
-                error("Syntax error in optitem" + look.tag);
+        if (Objects.requireNonNull(look.tag) == Tag.OPTION) {
+            match(Tag.OPTION);
+            match(Tag.PTA);
+            bexpr();
+            match(Tag.PTC);
+            match(Tag.DO);
+            stat();
+        } else {
+            error("Syntax error in optitem" + look.tag);
         }
     }
 
     private void bexpr() {
-        switch(look.tag) {
-            case RELOP:
-                match(Tag.RELOP);
-                expr();
-                expr();
-                break;
-            default:
-                error("Syntax error in bexpr");
+        if (Objects.requireNonNull(look.tag) == Tag.RELOP) {
+            match(Tag.RELOP);
+            expr();
+            expr();
+        } else {
+            error("Syntax error in bexpr");
         }
     }
 
     private void expr() {
-        switch(look.tag) {
-            case NUM:
-                match(Tag.NUM);
-                break;
-            case ID:
-                match(Tag.ID);
-                break;
-            case SUB:
+        switch (look.tag) {
+            case NUM -> match(Tag.NUM);
+            case ID -> match(Tag.ID);
+            case SUB -> {
                 match(Tag.SUB);
                 expr();
                 expr();
-                break;
-            case SUM:
+            }
+            case SUM -> {
                 match(Tag.SUM);
                 match(Tag.PTA);
                 exprlist();
                 match(Tag.PTC);
-                break;
-            case MUL:
+            }
+            case MUL -> {
                 match(Tag.MUL);
                 match(Tag.PTA);
                 exprlist();
                 match(Tag.PTC);
-                break;
-            case DIV:
+            }
+            case DIV -> {
                 match(Tag.DIV);
                 expr();
                 expr();
-                break;
-            default:
-                error("Syntax error in expr");
+            }
+            default -> error("Syntax error in expr");
         }
     }
 

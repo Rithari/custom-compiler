@@ -2,7 +2,7 @@ import java.io.*;
 
 public class Lexer {
 
-    public static int line = 1;
+    public int line = 1;
     private char peek = ' ';
 
     private void readch(BufferedReader br) {
@@ -19,138 +19,139 @@ public class Lexer {
             readch(br);
         }
         switch (peek) {
-            case '=': {
+            case '=' -> {
                 readch(br);
-                if(peek == '=')  {
+                if (peek == '=') {
                     peek = ' ';
                     return Keyword.eq;
-                }
-                else {
-                    System.err.println("Erroneous character" + " after = : " + peek );
+                } else {
+                    System.err.println("Erroneous character" + " after = : " + peek);
                     return null;
                 }
             }
-            case '<': {
+            case '<' -> {
                 readch(br);
-                if(peek == '>') {
+                if (peek == '>') {
                     peek = ' ';
                     return Keyword.ne;
-                } else if(peek == '=') {
+                } else if (peek == '=') {
                     peek = ' ';
                     return Keyword.le;
                 } else {
                     return Keyword.lt;
                 }
             }
-            case '>': {
+            case '>' -> {
                 readch(br);
-                if(peek == '=') {
+                if (peek == '=') {
                     peek = ' ';
                     return Keyword.ge;
                 } else {
                     return Keyword.gt;
                 }
             }
-            case '!':
+            case '!' -> {
                 peek = ' ';
                 return Token.not;
-            case '.': {
-                System.err.println("Invalid character '"+peek+"'");
+            }
+            case '.' -> {
+                System.err.println("Invalid character '" + peek + "'");
                 return null;
             }
-            case ',': {
+            case ',' -> {
                 peek = ' ';
                 return Token.comma;
             }
-            case ';': {
+            case ';' -> {
                 peek = ' ';
                 return Token.semicolon;
             }
-            case '/': {
+            case '/' -> {
                 readch(br);
-                if(peek == '/') {
-                    // Ignore everything until the end of the line
-                    while(peek != '\n') {
+                if (peek == '/') {
+                    // Ignore everything until the end of the line or eof
+                    while (peek != '\n' && peek != (char) -1) {
                         readch(br);
                     }
                     line++;
                     return lexical_scan(br);
-                } else if(peek == '*') {
-                    if(!validateComment(br)) {
+                } else if (peek == '*') {
+                    peek = ' ';
+                    if (!validateComment(br)) {
                         System.err.println("Garbage comment");
                         return null;
                     }
-                    else {
-                        peek = ' ';
-                        return lexical_scan(br);
-                    }
+                    return lexical_scan(br);
 
                 } else {
                     return Token.div;
                 }
             }
-            case '*': {
+            case '*' -> {
                 peek = ' ';
                 return Token.mul;
             }
-            case '-': {
+            case '-' -> {
                 peek = ' ';
                 return Token.sub;
             }
-            case '+': {
+            case '+' -> {
                 peek = ' ';
                 return Token.sum;
             }
-            case '(': {
+            case '(' -> {
                 peek = ' ';
                 return Token.pta;
             }
-            case ')': {
+            case ')' -> {
                 peek = ' ';
                 return Token.ptc;
             }
-            case '[': {
+            case '[' -> {
                 peek = ' ';
                 return Token.pqa;
             }
-            case ']': {
+            case ']' -> {
                 peek = ' ';
                 return Token.pqc;
             }
-            case '{': {
+            case '{' -> {
                 peek = ' ';
                 return Token.pga;
             }
-            case '}': {
+            case '}' -> {
                 peek = ' ';
                 return Token.pgc;
             }
-            case '|':
+            case '|' -> {
                 readch(br);
-                if(peek == '|') {
+                if (peek == '|') {
                     peek = ' ';
                     return Keyword.or;
                 } else {
-                    System.err.println("Erroneous character" + " after | : " + peek );
+                    System.err.println("Erroneous character" + " after | : " + peek);
                     return null;
                 }
-            case '&':
+            }
+            case '&' -> {
                 readch(br);
                 if (peek == '&') {
                     peek = ' ';
                     return Keyword.and;
                 } else {
                     System.err.println("Erroneous character"
-                            + " after & : "  + peek );
+                            + " after & : " + peek);
                     return null;
                 }
-            case (char)-1:
+            }
+            case (char) -1 -> {
                 return Token.eof;
-            default:
+            }
+            default -> {
                 if (Character.isLetter(peek) || peek == '_') {
                     // Build the string with the sequence of characters
                     StringBuilder toCheck = new StringBuilder();
-                    while(Character.isLetter(peek) || Character.isDigit(peek) || peek == '_') {
+                    while (Character.isLetter(peek) || Character.isDigit(peek) || peek == '_') {
                         toCheck.append(peek);
                         try {
                             br.mark(100);
@@ -172,50 +173,62 @@ public class Lexer {
                     }
 
                     // Validate the string using a DFA
-                    if(validateString(toCheckString)) {
+                    if (validateString(toCheckString)) {
                         // If our valid string has at least 1 digit then it's an identifier and not a number
-                        if(toCheckString.matches(".*\\d.*")) {
+                        if (toCheckString.matches(".*\\d.*")) {
                             peek = ' ';
                             return new Keyword(Tag.ID, toCheckString);
                         }
                         // If our valid string is a keyword then return the keyword, otherwise return null
                         switch (toCheckString) {
-                            case "assign":
+                            case "assign" -> {
                                 peek = ' ';
                                 return Keyword.assign;
-                            case "to":
+                            }
+                            case "to" -> {
                                 peek = ' ';
                                 return Keyword.to;
-                            case "option":
+                            }
+                            case "option" -> {
                                 peek = ' ';
                                 return Keyword.option;
-                            case "conditional":
+                            }
+                            case "conditional" -> {
                                 peek = ' ';
                                 return Keyword.conditional;
-                            case "else":
+                            }
+                            case "else" -> {
                                 peek = ' ';
                                 return Keyword.elsetok;
-                            case "while":
+                            }
+                            case "while" -> {
                                 peek = ' ';
                                 return Keyword.whiletok;
-                            case "do":
+                            }
+                            case "do" -> {
                                 peek = ' ';
                                 return Keyword.dotok;
-                            case "begin":
+                            }
+                            case "begin" -> {
                                 peek = ' ';
                                 return Keyword.begin;
-                            case "end":
+                            }
+                            case "end" -> {
                                 peek = ' ';
                                 return Keyword.end;
-                            case "print":
+                            }
+                            case "print" -> {
                                 peek = ' ';
                                 return Keyword.print;
-                            case "read":
+                            }
+                            case "read" -> {
                                 peek = ' ';
                                 return Keyword.read;
-                            default:
+                            }
+                            default -> {
                                 peek = ' ';
                                 return new Keyword(Tag.ID, toCheckString);
+                            }
                         }
                     } else {
                         System.err.println("Erroneous character: " + peek);
@@ -225,7 +238,7 @@ public class Lexer {
                 } else if (Character.isDigit(peek)) {
                     // Build the string with the sequence of characters
                     StringBuilder toCheck = new StringBuilder();
-                    while(Character.isDigit(peek)) {
+                    while (Character.isDigit(peek)) {
                         toCheck.append(peek);
                         try {
                             br.mark(100);
@@ -242,7 +255,7 @@ public class Lexer {
                         e.printStackTrace();
                     }
                     // Validate the string using a DFA
-                    if(validateNumber(toCheckString)) {
+                    if (validateNumber(toCheckString)) {
                         peek = ' ';
                         return new NumberTok(toCheckString);
                     } else {
@@ -250,11 +263,12 @@ public class Lexer {
                         return null;
                     }
                 } else {
-                        System.err.println("Erroneous character: "
-                                + peek );
-                        return null;
+                    System.err.println("Erroneous character: "
+                            + peek);
+                    return null;
                 }
-         }
+            }
+        }
     }
     // DFA: check if the comment start finishes or not if not it's just div, mult and not a comment. For single lines
     // simply continue until the

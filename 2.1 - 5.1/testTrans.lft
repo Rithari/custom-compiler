@@ -1,8 +1,235 @@
-read[a_1, _2b];
-while(<> a_1 _b)
-        conditional[option (> a_1 _b) do assign - a_1 _b to a_1]
-        else assign - _b a_1 to _b end;
-print[a_1, +(a_1, _b, 100), 2023];
-assign 22 to c, d;
-print[c, d]
-// amogus
+
+/*
+//  assegnamento, cicli while annidati e stampa! -> OK
+assign 10 to x;
+
+while (> x 0) {
+    assign 10 to y;
+    while (> y 0) {
+        print[*(x, y)];
+        assign - y 1 to y
+    };
+
+    //print[x];
+    assign - x 1 to x
+}
+*/
+
+/*
+// assegnamento, if.
+
+read[x,y];
+
+conditional [
+    option (> x y) do print[x]
+]
+else print[y] end;
+
+read[x, y, z];
+
+conditional [
+	option (> x y) do conditional [ option (> x z) do print[x] ] else print[z] end
+	]
+else
+	conditional [ option (> y z) do print[y] ] else print[z] end
+end; //0710
+
+assign 10 to a;
+print[a]
+*/
+
+/*
+//euclide
+read[a,b];
+while (&& ! == a b && ! < a 0 ! < b 0)
+	conditional [ option (> a b) do assign - a b to a ]
+	else assign - b a to b end;
+print[a]
+*/
+/*
+read[a, b, c];
+
+conditional [
+    option (!false) do {assign - a b to a; print[a]}
+    option (> a c) do print[+(c, 10, 20)]
+] else {
+    conditional [
+        option (true) do print[a, b ,c]
+    ] else assign 20 to x end
+} end;
+
+assign 10 to y
+*/
+
+
+/*
+read[a, b, c];
+
+conditional [
+    option (! || > a 10 > b 10) do print[a]
+    option (! > c 20) do print[c]
+] else print[b] end
+*/
+
+/*
+// fibonacci iterativo
+read[n];
+assign 1 to r;
+assign 0 to a;
+assign 1 to b;
+
+while (> n 0) {
+    assign +(a, b) to r;
+    assign b to a;
+    assign r to b;
+    assign - n 1 to n
+};
+
+print[r]
+****/
+
+/*
+assign +(+(4, 2, 14, 3), 1 ,2 ,3, 4) to x, y ,z, tuo_padre;
+print[x, y, z, +(10, tuo_padre)]
+*/
+
+/*
+assign +(5, *(2, 3)) to x, y, z;
+print[x, y, z]//lAST
+*/
+
+/*
+assign *(1, 3) to a, b;
+read[a];
+print[a];
+
+assign 1 to c;
+assign 1 to res;
+while (<= c a) {
+    assign *(res, c) to res;
+    assign +(1, c) to c;
+    print[res]
+};
+*/
+/*
+conditional[
+    option (<= a c) do {
+        assign a to tmp;
+        assign c to a;
+        assign tmp to c
+    }
+] else print[11] end*/
+
+/* test123
+/// lolz
+assign 3 to z;
+assign 4 to x;
+
+assign +(- 5 z, +(z, x), 7) to a */
+
+/*
+assign 4 to a,b;
+print[a, b];
+read[_x1, y_1];
+while(<> _x1 y_1) {
+    /*commento su
+    due righe****
+    conditional [
+        option (> _x1 y_1) do {
+            assign -_x1 y_1 to _x1
+        }
+    ] else {
+        assign - y_1 _x1 to y_1
+    } end;
+    //commento
+    print[y_1, *(_x1, y_1, 1000), 25]
+}
+//Commento*/
+
+/*
+read[x, y];
+conditional[
+        option (> x y) do print[111]
+        option (== x y) do print[222]
+    ] else print[333] end;
+
+while (> y 0)
+    conditional [
+        option (<= x y) do {
+            assign - y 1 to y, z;
+            print[y]
+        }
+    ] else {
+        assign - y 2 to y;
+        print[y]
+    } end;
+print[1, +(2, *(3, 4, 5))]*/
+
+
+/*
+read[x, y, z];
+
+conditional[
+    option (< x y) do {
+        print[x]
+    } option (> x y) do {
+        print[y]
+    }]  else print[x, y] end;
+
+print[y]*/
+
+read[x, y, z];
+
+while (> x 0) {
+    conditional[
+        option (< x z) do {
+            print[x]
+        }
+        option (> y 0) do {
+            print[y, +(x, y, z)]
+        }
+        option (> z 0) do {
+            print[z]
+        } option (< x y) do assign 3 to y
+        option (> x y) do assign 3 to x
+    ] else { print[x, y, z] } end;
+    assign - x 1 to x
+}
+
+/*
+read[x, y, z];
+
+while (> x 0) {
+    conditional[
+        option (! && < x y  < x z) do {
+            print[x]
+        }
+        option (! > y 0) do {
+            print[y, +(x, y, z)]
+        }
+        option (> z 0) do {
+            print[z];
+            while (> x 0) {
+                conditional[
+                    option (! && < x y  < x z) do {
+                        print[x]
+                    }
+                    option (! > y 0) do {
+                        print[y, +(x, y, z)]
+                    }
+                    option (> z 0) do {
+                        print[z]
+                    }
+                ] else { print[x, y, z] } end;
+                assign - x 1 to x
+            }
+        }
+    ] end; //else { print[x, y, z] } end;
+    assign - x 1 to x
+}*/
+
+/*read[x, y, z];
+
+conditional [
+    option(&& || < x y && < x z <> x y > x 0) do print[x]
+] end*/
